@@ -1,0 +1,9 @@
+@import "woo_override";
+.project-map{
+    filter: brightness(93%) contrast(144%) saturate(0%) blur(0px) hue-rotate(360deg);
+}
+
+.elementor-location-header{
+    position: relative;
+    z-index: 999;
+}
