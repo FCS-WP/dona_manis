@@ -90,9 +90,9 @@ abstract class AbstractBlock {
 	 * @return string Rendered block type output.
 	 */
 	public function render_callback( $attributes = [], $content = '', $block = null ) {
-
 		$render_callback_attributes = $this->parse_render_callback_attributes( $attributes );
 		if ( ! is_admin() && ! WC()->is_rest_api_request() ) {
+			$this->register_block_type_assets();
 			$this->enqueue_assets( $render_callback_attributes, $content, $block );
 		}
 		return $this->render( $render_callback_attributes, $content, $block );
@@ -107,7 +107,20 @@ abstract class AbstractBlock {
 		if ( $this->enqueued_assets ) {
 			return;
 		}
+		$this->register_block_type_assets();
 		$this->enqueue_data();
+	}
+
+	/**
+	 * Are we currently on the admin block editor screen?
+	 */
+	protected function is_block_editor() {
+		if ( ! is_admin() || ! function_exists( 'get_current_screen' ) ) {
+			return false;
+		}
+		$screen = get_current_screen();
+
+		return $screen && $screen->is_block_editor();
 	}
 
 	/**
@@ -122,7 +135,6 @@ abstract class AbstractBlock {
 			return false;
 		}
 		$this->integration_registry->initialize( $this->block_name . '_block' );
-		$this->register_block_type_assets();
 		$this->register_block_type();
 		add_action( 'enqueue_block_editor_assets', [ $this, 'enqueue_editor_assets' ] );
 	}
@@ -211,12 +223,19 @@ abstract class AbstractBlock {
 		$block_settings = [
 			'render_callback' => $this->get_block_type_render_callback(),
 			'editor_script'   => $this->get_block_type_editor_script( 'handle' ),
-			'editor_style'    => $this->get_block_type_editor_style(),
-			'style'           => $this->get_block_type_style(),
 		];
 
-		if ( isset( $this->api_version ) && '2' === $this->api_version ) {
-			$block_settings['api_version'] = 2;
+		// Conditionally override these, otherwise rely on block.json metadata.
+		if ( $this->get_block_type_style() ) {
+			$block_settings['style'] = $this->get_block_type_style();
+		}
+
+		if ( $this->get_block_type_editor_style() ) {
+			$block_settings['editor_style'] = $this->get_block_type_editor_style();
+		}
+
+		if ( isset( $this->api_version ) ) {
+			$block_settings['api_version'] = intval( $this->api_version );
 		}
 
 		$metadata_path = $this->asset_api->get_block_metadata_path( $this->block_name );
@@ -229,8 +248,8 @@ abstract class AbstractBlock {
 		 */
 		if (
 			! is_admin() &&
-			! wc_current_theme_is_fse_theme() &&
-			$block_settings['style'] &&
+			! wp_is_block_theme() &&
+			! empty( $block_settings['style'] ) &&
 			(
 				! function_exists( 'wp_should_load_separate_core_block_assets' ) ||
 				! wp_should_load_separate_core_block_assets()

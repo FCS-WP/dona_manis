@@ -12,6 +12,7 @@ src/wp-content/*
 !src/wp-content/themes
 
 !src/wp-content/plugins
+!src/wp-content/plugins
 
 !src/wp-content/.htaccess
 
@@ -23,6 +24,7 @@ src/wp-content/plugins/akismet
 src/wp-content/plugins/hello.php
 
 # Ignore Zippy plugins Package
+src/wp-content/plugins/zippy-addons/*
 
 # Ignore themes default
 src/wp-content/themes/twentytwentyone

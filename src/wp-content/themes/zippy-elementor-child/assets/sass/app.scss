@@ -1,4 +1,6 @@
 @import "woo_override";
+@import "booking"; 
+@import "mini_cart"; 
 .project-map{
     filter: brightness(93%) contrast(144%) saturate(0%) blur(0px) hue-rotate(360deg);
 }

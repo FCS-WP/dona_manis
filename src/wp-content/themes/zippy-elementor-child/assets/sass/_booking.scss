@@ -1,0 +1,67 @@
+.dialog-widget {
+  z-index: 999 !important;
+  pointer-events: none;
+}
+.dialog-close-button {
+  top: 23px !important;
+  margin-top: 0;
+  right: 39px !important;
+  font-size: 18px !important;
+  svg {
+    fill: #e8c976 !important;
+  }
+}
+.dialog-message {
+  z-index: 12 !important;
+  .e-flex.e-con-boxed.e-con {
+    padding: 0;
+  }
+}
+#zippy-form {
+  button {
+    border-radius: 12px !important;
+    padding: 10px 12px !important;
+  }
+  .btn-close-lightbox,
+  .dialog-close-button {
+    background: #ec7265 !important;
+    padding: 10px 0px !important;
+    color: #000;
+    border-radius: 0px !important;
+    &.close {
+      background: var(--e-global-color-primary) !important;
+      border-radius: 12px !important;
+      color: var(--e-global-color-accent);
+    }
+  }
+
+  .method-icon {
+    background: none;
+
+    border-radius: 8px;
+    &:hover {
+      background: var(--e-global-color-primary);
+    }
+  }
+  .method-title {
+    font-size: 16px;
+    color: #000;
+  }
+  .outlet-selects {
+    .select-stores {
+      pointer-events: none;
+    }
+  }
+}
+
+.swal2-confirm {
+  border: none !important;
+  background-color: var(--e-global-color-primary) !important;
+  color: #fff !important;
+}
+.swal2-cancel {
+  background-color: transparent !important;
+  background-image: none !important;
+  border: 1px solid var(--e-global-color-primary);
+  color: var(--e-global-color-primary) !important;
+}

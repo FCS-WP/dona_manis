@@ -96,7 +96,7 @@ class DataStore extends ReportsDataStore implements DataStoreInterface {
 	 */
 	protected function assign_report_columns() {
 		$table_name = self::get_db_table_name();
-		// Avoid ambigious columns in SQL query.
+		// Avoid ambiguous columns in SQL query.
 		$refunds     = "ABS( SUM( CASE WHEN {$table_name}.net_total < 0 THEN {$table_name}.net_total ELSE 0 END ) )";
 		$gross_sales =
 			"( SUM({$table_name}.total_sales)" .
@@ -398,7 +398,7 @@ class DataStore extends ReportsDataStore implements DataStoreInterface {
 		$this->update_intervals_sql_params( $query_args, $db_interval_count, $expected_interval_count, $table_name );
 		$this->interval_query->add_sql_clause( 'order_by', $this->get_sql_clause( 'order_by' ) );
 		$this->interval_query->add_sql_clause( 'limit', $this->get_sql_clause( 'limit' ) );
-		$this->interval_query->add_sql_clause( 'select', ", MAX({$table_name}.date_created) AS datetime_anchor" );
+		$this->interval_query->add_sql_clause( 'select', ", MAX({$table_name}.{$this->date_column_name}) AS datetime_anchor" );
 		if ( '' !== $selections ) {
 			$this->interval_query->add_sql_clause( 'select', ', ' . $selections );
 		}

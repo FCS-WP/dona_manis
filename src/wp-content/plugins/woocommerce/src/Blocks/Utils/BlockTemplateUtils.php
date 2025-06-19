@@ -1,6 +1,7 @@
 <?php
 namespace Automattic\WooCommerce\Blocks\Utils;
 
+use WP_Block_Patterns_Registry;
 use Automattic\WooCommerce\Admin\Features\Features;
 use Automattic\WooCommerce\Blocks\Options;
 use Automattic\WooCommerce\Blocks\Package;
@@ -315,13 +316,13 @@ class BlockTemplateUtils {
 
 		$wp_template_part_filenames = array(
 			'checkout-header.html',
+			'coming-soon-social-links.html',
 			'mini-cart.html',
+			'simple-product-add-to-cart-with-options.html',
+			'external-product-add-to-cart-with-options.html',
+			'variable-product-add-to-cart-with-options.html',
+			'grouped-product-add-to-cart-with-options.html',
 		);
-
-		if ( Features::is_enabled( 'experimental-blocks' ) ) {
-			$wp_template_part_filenames[] = 'product-filters.html';
-			$wp_template_part_filenames[] = 'product-filters-overlay.html';
-		}
 
 		/*
 		* This may return the blockified directory for wp_templates.
@@ -480,7 +481,7 @@ class BlockTemplateUtils {
 	 * @return boolean
 	 */
 	public static function theme_has_template( $template_name ) {
-		return ! ! self::get_theme_template_path( $template_name, 'wp_template' );
+		return (bool) self::get_theme_template_path( $template_name, 'wp_template' );
 	}
 
 	/**
@@ -490,7 +491,7 @@ class BlockTemplateUtils {
 	 * @return boolean
 	 */
 	public static function theme_has_template_part( $template_name ) {
-		return ! ! self::get_theme_template_path( $template_name, 'wp_template_part' );
+		return (bool) self::get_theme_template_path( $template_name, 'wp_template_part' );
 	}
 
 	/**
@@ -501,9 +502,9 @@ class BlockTemplateUtils {
 	 * @return boolean
 	 */
 	public static function supports_block_templates( $template_type = 'wp_template' ) {
-		if ( 'wp_template_part' === $template_type && ( wc_current_theme_is_fse_theme() || current_theme_supports( 'block-template-parts' ) ) ) {
+		if ( 'wp_template_part' === $template_type && ( wp_is_block_theme() || current_theme_supports( 'block-template-parts' ) ) ) {
 			return true;
-		} elseif ( 'wp_template' === $template_type && wc_current_theme_is_fse_theme() ) {
+		} elseif ( 'wp_template' === $template_type && wp_is_block_theme() ) {
 			return true;
 		}
 		return false;
@@ -690,10 +691,43 @@ class BlockTemplateUtils {
 		$use_blockified_templates = get_option( Options::WC_BLOCK_USE_BLOCKIFIED_PRODUCT_GRID_BLOCK_AS_TEMPLATE );
 
 		if ( false === $use_blockified_templates ) {
-			return wc_current_theme_is_fse_theme();
+			return wp_is_block_theme();
 		}
 
 		return wc_string_to_bool( $use_blockified_templates );
+	}
+
+	/**
+	 * Determines whether the provided $blocks contains any of the $block_names,
+	 * or if they contain a pattern that contains any of the $block_names.
+	 *
+	 * @param string[]   $block_names Full block types to look for.
+	 * @param WP_Block[] $blocks      Array of block objects.
+	 * @return bool Whether the content contains the specified block.
+	 */
+	public static function has_block_including_patterns( $block_names, $blocks ) {
+		$flattened_blocks = self::flatten_blocks( $blocks );
+
+		foreach ( $flattened_blocks as &$block ) {
+			if ( isset( $block['blockName'] ) && in_array( $block['blockName'], $block_names, true ) ) {
+				return true;
+			}
+			if (
+				'core/pattern' === $block['blockName'] &&
+				isset( $block['attrs']['slug'] )
+			) {
+				$registry = WP_Block_Patterns_Registry::get_instance();
+				$pattern  = $registry->get_registered( $block['attrs']['slug'] );
+				if ( isset( $pattern['content'] ) ) {
+					$pattern_blocks = parse_blocks( $pattern['content'] );
+					if ( self::has_block_including_patterns( $block_names, $pattern_blocks ) ) {
+						return true;
+					}
+				}
+			}
+		}
+
+		return false;
 	}
 
 	/**
@@ -703,7 +737,13 @@ class BlockTemplateUtils {
 	 * @return boolean
 	 */
 	public static function template_has_legacy_template_block( $template ) {
-		return has_block( 'woocommerce/legacy-template', $template->content );
+		if ( has_block( 'woocommerce/legacy-template', $template->content ) ) {
+			return true;
+		}
+
+		$blocks = parse_blocks( $template->content );
+
+		return self::has_block_including_patterns( array( 'woocommerce/legacy-template' ), $blocks );
 	}
 
 	/**
